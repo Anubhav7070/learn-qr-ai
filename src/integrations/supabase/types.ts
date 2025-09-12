@@ -52,6 +52,27 @@ export type Database = {
           },
         ]
       }
+      activity_outcomes: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          outcome_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          outcome_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          outcome_id?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           id: string
@@ -84,6 +105,30 @@ export type Database = {
           },
         ]
       }
+      learning_outcomes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           created_at: string
@@ -112,6 +157,36 @@ export type Database = {
           lesson_date?: string
           qr_code?: string
           teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notices: {
+        Row: {
+          attachment_url: string | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
           title?: string
           updated_at?: string
         }
