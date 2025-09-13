@@ -1,129 +1,135 @@
-import React, { useState } from 'react';
-import { Navigation } from '@/components/layout/Navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { BookOpen, QrCode, Calendar, MessageSquare, BarChart3, Users } from 'lucide-react';
+import { QRScanner } from '@/components/qr/QRScanner'; 
 import { NoticesBoard } from '@/components/notices/NoticesBoard';
-import { QRScanner } from '@/components/qr/QRScanner';
 import { StudentAnalytics } from '@/components/analytics/StudentAnalytics';
-import { Camera, Bell, BarChart3, BookOpen, Calendar, CheckCircle } from 'lucide-react';
+import { AttendanceMarker } from '@/components/attendance/AttendanceMarker';
+import { AIAssistant } from '@/components/activities/AIAssistant';
+import { Button } from '@/components/ui/button';
 
 export const StudentDashboard = () => {
-  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('lessons');
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchLessons();
+  }, [user]);
+
+  const fetchLessons = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .order('lesson_date', { ascending: false });
+
+      if (error) throw error;
+      setLessons(data || []);
+    } catch (error: any) {
+      console.error('Error fetching lessons:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch lessons",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
-      <main className="container py-6 space-y-6">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Camera className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Scan QR Code</CardTitle>
-                  <CardDescription>Mark your attendance for classes</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={() => setShowQRScanner(true)}
-                className="w-full"
-                size="lg"
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                Open Camera
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-secondary/10 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-secondary-foreground" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Attendance Rate</CardTitle>
-                  <CardDescription>Your overall attendance</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-secondary-foreground">85%</div>
-              <p className="text-sm text-muted-foreground">Great attendance!</p>
-            </CardContent>
-          </Card>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold">Student Dashboard</h1>
+        
+        <div className="flex space-x-2">
+          <Button
+            onClick={() => setActiveTab('lessons')}
+            variant={activeTab === 'lessons' ? 'default' : 'outline'}
+          >
+            <BookOpen className="mr-2 h-4 w-4" />
+            Lessons
+          </Button>
+          <Button
+            onClick={() => setActiveTab('notices')}
+            variant={activeTab === 'notices' ? 'default' : 'outline'}
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Notices
+          </Button>
+          <Button
+            onClick={() => setActiveTab('analytics')}
+            variant={activeTab === 'analytics' ? 'default' : 'outline'}
+          >
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Analytics
+          </Button>
         </div>
 
-        {/* Main Tabs */}
-        <Tabs defaultValue="notices" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto">
-            <TabsTrigger value="notices" className="flex items-center space-x-1">
-              <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Notices</span>
-            </TabsTrigger>
-            <TabsTrigger value="activities" className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Activities</span>
-            </TabsTrigger>
-            <TabsTrigger value="outcomes" className="flex items-center space-x-1">
-              <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline">Outcomes</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center space-x-1">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Analytics</span>
-            </TabsTrigger>
-          </TabsList>
+        {activeTab === 'lessons' && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Available Lessons</h3>
+              
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {lessons.map((lesson) => (
+                  <Card key={lesson.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => setSelectedLesson(lesson)}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{lesson.title}</h4>
+                          <p className="text-sm text-muted-foreground">{lesson.description}</p>
+                          <div className="flex items-center space-x-2 mt-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(lesson.lesson_date).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <Badge variant={lesson.qr_code ? 'default' : 'secondary'}>
+                          {lesson.qr_code ? 'Available' : 'Coming Soon'}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {lessons.length === 0 && (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No lessons available yet</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
 
-          <TabsContent value="notices" className="mt-6">
-            <NoticesBoard />
-          </TabsContent>
+            <div className="space-y-4">
+              {selectedLesson && (
+                <AttendanceMarker
+                  lessonId={selectedLesson.id}
+                  lessonTitle={selectedLesson.title}
+                  onAttendanceMarked={() => fetchLessons()}
+                />
+              )}
+              
+              <AIAssistant context="Student learning support and study assistance" />
+            </div>
+          </div>
+        )}
 
-          <TabsContent value="activities" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activities</CardTitle>
-                <CardDescription>Your attended classes and workshops</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-center py-8">
-                  Activities list will be shown here
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        {activeTab === 'notices' && <NoticesBoard />}
 
-          <TabsContent value="outcomes" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Learning Outcomes</CardTitle>
-                <CardDescription>Your progress towards learning objectives</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-center py-8">
-                  Learning outcomes progress will be shown here
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="mt-6">
-            <StudentAnalytics />
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* QR Scanner Modal */}
-      {showQRScanner && (
-        <QRScanner onClose={() => setShowQRScanner(false)} />
-      )}
+        {activeTab === 'analytics' && <StudentAnalytics />}
+      </div>
     </div>
   );
 };
